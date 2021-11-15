@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<title>Computer</title>
+		<style type="text/css">
+            
+            body {
+                font-family:Consolas, monospace;
+                font-size:14px;
+            }
+            h1 {
+                text-align:center;
+            }
+            
+            div.card { 
+                text-align:center;
+                width:50%;
+                margin:0 auto;
+            }
+            
+			.absolute {
+                position:absolute;
+                top:50px;
+                left:50px;
+                height:0;
+                width:20%;
+                overflow:visible;
+			}
+            
+            .instructionTable {
+                width:10%;
+                margin:10px auto;
+            }
+			
+			.clearFloat {
+				clear:both;
+			}
+			
+			table,th,td {
+				border: 1px solid black;
+				border-collapse: collapse;
+                margin: 0 auto;
+                padding:5px;
+			}
+            
+            thead {
+                font-weight:bold;
+            }
+            
+            th {
+                border:1px solid black;
+            }
+            
+            .userInput {
+                margin: 2px auto;
+            }
+            
+            textarea {
+                width: 100%;
+                height: 100px;
+                background-color:#006;
+                color:white;
+                font-weight:bold;
+                pointer-events: none;
+            }
+            
+            .memoryDisplay td, .accumulatorDisplay td {
+                padding:5px;
+            }
+            
+            
+		</style>
+		<script>
+			window.addEventListener("load", init);
+			let memory = Array.apply(null, Array(100));
+            memory.fill("000");
+			let accumulator = Array.apply(null, Array(16));
+            accumulator.fill("000");
+			
+			function init() {
+				document.querySelector(".add").addEventListener("click", addNewIns);
+				document.querySelector(".run").addEventListener("click", runOutput);
+				document.querySelector(".newInput").addEventListener("click", addNewInput);
+                document.querySelector(".clearConsole").addEventListener("click", clearConsole);
+				//document.querySelector("#applyMemoryNumber").addEventListener("click", populateMemoryDisplay);
+                populateAccumulatorDisplay();
+                populateMemoryDisplay();
+                
+				console.log("Loaded");
+			}
+			
+            function clearConsole() {
+                document.querySelector(".outputbox").value = "";
+            }
+            
+            function populateAccumulatorDisplay() {
+            
+                let disp = document.querySelector(".accumulatorDisplay");
+                
+                for(let i = 0; i < disp.children.length; i++) {
+                    disp.children[i].innerHTML = "";
+                }
+                
+                let curCel = 0;
+				let curRow = 0; 
+				let curCol = 0; //once this reaches 10, we set it back to 0 to make a new row.
+                let newData;
+                
+                for(let v = 0; v < 4; v++) {
+                    for(let i = 0; i < 4; i++) {
+                        
+                        newData = document.createElement("td");
+                        //console.log(curCel);
+                        if(accumulator[i]!==undefined){
+                            if(String(accumulator[curCel])!=="000"){
+                                newData.innerHTML = "<b>" + String(accumulator[curCel]).padStart(3, '0') + "</b>";
+                            } else {
+                                newData.innerHTML = String(accumulator[curCel]).padStart(3, '0');
+                            }
+                        }
+                        
+                        curCel++;
+                        document.querySelector(".accumulatorDisplay .row" + i).appendChild(newData);
+                    }
+                }
+            }
+            
+			function populateMemoryDisplay() {
+				let disp = document.querySelector(".memoryDisplay");
+                
+                for(let i = 0; i < disp.children.length; i++) {
+                    disp.children[i].innerHTML = "";
+                }
+                
+				let curRow = 0; 
+				let curCol = 0; //once this reaches 10, we set it back to 0 to make a new row.
+                let newData;
+                
+                for(let v = 0; v < 10; v++){
+                    for(let i = 0; i < 10; i++) {
+                        currentCell = parseInt("" + v + i);
+                        newData = document.createElement("td");
+                        
+                        if(memory[i]!==undefined){
+                            if(String(memory[currentCell])!=="000"){
+                                newData.innerHTML = "<b>" + String(memory[currentCell]).padStart(3, '0') + "</b>";
+                            } else {
+                                newData.innerHTML = String(memory[currentCell]).padStart(3, '0');
+                            }
+                        }
+                        
+                        document.querySelector(".memoryDisplay .row" + i).appendChild(newData);
+                        
+                    }
+                }
+			}
+			
+			function addNewIns() {
+                let newRow = document.createElement("tr");
+                let newTd = document.createElement("td");
+                let newTd2 = document.createElement("td");
+                let newInput = document.createElement("input");
+                let newInput2 = document.createElement("input");
+                newRow.className = "rowInstruction";
+                newInput.className = "ins";
+                newInput.type = "text";
+                newInput2.className = "ins";
+                newInput2.type = "text";
+                newTd.appendChild(newInput);
+                newTd2.appendChild(newInput2);
+                newRow.appendChild(newTd);
+                newRow.appendChild(newTd2);
+				document.querySelector(".instructions").appendChild(newRow);
+			}
+			
+			function addNewInput() {
+                let newInput = document.createElement("input");
+                let newBr = document.createElement("br");
+                newInput.type = "text";
+                newInput.className = "userInput";
+				document.querySelector(".inputlist").appendChild(newInput);
+				document.querySelector(".inputlist").appendChild(newBr);
+                //console.log(newInput);
+                //console.log(document.querySelector(".inputlist"));
+			}
+			
+			function runOutput() {
+                //let startAt = parseInt(document.querySelector(".startAt").value);
+                
+				let instructionRows = document.querySelectorAll(".rowInstruction");
+				let instructions = [];
+				//loop through all instructions
+				for(let i = 0, n = instructionRows.length; i < n; i++) {
+					let bit = instructionRows[i].cells[0].children[0].value;
+					let ins = instructionRows[i].cells[1].children[0].value;
+					instructions[i] = [bit, ins];
+				}
+                
+                //console.log(instructions);
+				
+				let input_i = 0;
+				
+				for(let i = 0, n = instructions.length; i < n; i++) {
+                    
+					let insTable = instructions;
+					let loc = insTable[i][0];
+					let ins = insTable[i][1];
+					let opcode = 0;
+					let target = 0;
+					
+					memory[loc] = ins;
+					
+					target = ins.slice(1);
+					opcode = ins.charAt(0);
+                    if(parseInt(target)>100){
+                        break;
+                    }
+					let inputs = document.querySelectorAll(".userInput");
+					
+					
+					if(opcode!==null){
+						//console.log("Instruction #" + (i+1) + ":\n  Opcode: " + opcode + "\n  Address: " + target);
+					}
+					
+					switch(opcode) {
+						case "0": //input
+                            console.log("input_i is: " + input_i);
+                            let input;
+                            if(inputs[input_i] == undefined){
+                                input = "000";
+                            } else {
+                                input = inputs[input_i].value || "000";
+                            }
+							memory[target] = input;
+                            
+							console.log("   [#" + loc + " " + ins + "]" + " store input #" + input_i + " (" + input + ") to #" + target + ". Location now: " + memory[target]);
+							input_i++; //incrememnt input index
+							break;
+						case "1": //clear and add to accumulator
+							accumulator.fill("000");
+                            accumulator[0] = parseInt(memory[target]);
+							//console.log("   [#" + loc + " " + ins + "]" + " clear and add to accumulator: " + memory[target]);
+                            break;
+						case "2": //add to accumulator
+							accumulator[accumulator.indexOf("000")] = parseInt(memory[target]);
+							//console.log("   [#" + loc + " " + ins + "]" + " add to accumulator: " + memory[target] + " from address #" + target);
+							break;
+						case "5": //output address value to console
+							document.querySelector(".outputbox").value = " > " + memory[target] + "\n" + document.querySelector(".outputbox").value;
+							//console.log("   [#" + loc + " " + ins + "]" + " Output value (" + memory[target] + ") from address #" + target + " to console.");
+							break;
+						case "6": //store accumulator value to address
+							let total = 0;
+							for(var acc_i = 0; acc_i < accumulator.length; acc_i++) {
+								total += parseInt(accumulator[acc_i]);
+							}
+							memory[target] = total;
+							//console.log("   [#" + loc + " " + ins + "]" + " Store accumulator value (" + memory[target] + ") to #" + target);
+							break;
+						case "7":
+							accumulator.push(parseInt(memory[target])*(-1));
+							//console.log("   [#" + loc + " " + ins + "]" + " Substract from accumulator: " + memory[target] + " from address #" + target);
+							break;
+						case "9": //halt and reset
+							
+							break;
+							
+					}
+					
+					
+					//console.log(instructions[i][0] + " " + instructions[i][1]);
+				}
+				populateMemoryDisplay();
+                populateAccumulatorDisplay();
+				
+				
+			}
+		</script>
+	</head>
+	<body>
+        <h1>Paper Computer Emulator v1.5</h1>
+		<div class="card">
+			<table class="instructionTable">
+			<thead>
+				<th>Address</th>
+				<th>Instruction</th>
+			</thead>
+			<tbody class="instructions">
+				<tr class="rowInstruction">
+					<td><input type="text" class="bit"></input></td>
+					<td><input type="text" class="ins"></input></td>
+				</tr>
+				
+				<tr class="rowInstruction">
+					<td><input type="text" class="bit"></input></td>
+					<td><input type="text" class="ins"></input></td>
+				</tr>
+				
+				<tr class="rowInstruction">
+					<td><input type="text" class="bit"></input></td>
+					<td><input type="text" class="ins"></input></td>
+				</tr>
+				
+				<tr class="rowInstruction">
+					<td><input type="text" class="bit"></input></td>
+					<td><input type="text" class="ins"></input></td>
+				</tr>
+				
+				<tr class="rowInstruction">
+					<td><input type="text" class="bit"></input></td>
+					<td><input type="text" class="ins"></input></td>
+				</tr>
+				
+				<tr class="rowInstruction">
+					<td><input type="text" class="bit"></input></td>
+					<td><input type="text" class="ins"></input></td>
+				</tr>
+				
+				<tr class="rowInstruction">
+					<td><input type="text" class="bit"></input></td>
+					<td><input type="text" class="ins"></input></td>
+				</tr>
+				
+				<tr class="rowInstruction">
+					<td><input type="text" class="bit"></input></td>
+					<td><input type="text" class="ins"></input></td>
+				</tr>
+				
+				<tr class="rowInstruction">
+					<td><input type="text" class="bit"></input></td>
+					<td><input type="text" class="ins"></input></td>
+				</tr>
+				
+				<tr class="rowInstruction">
+					<td><input type="text" class="bit"></input></td>
+					<td><input type="text" class="ins"></input></td>
+				</tr>
+			</tbody>
+			</table>
+			<div class="addNew">
+				<input type="button" class="add" value="Add new entry"></input>
+				<input type="button" class="run" value="Run Program"></input>
+			</div>
+            <div class="absolute">
+                <div class="memoryTable">
+                    <h2>Memory</h2>
+					<!--<p>Number of memory addresses: </p><p><input type="number" id="numberOfMemory">&nbsp;<input type="button" id="applyMemoryNumber" value="Apply"></p>-->
+					
+                    <table>
+                        <tbody class="memoryDisplay">
+                            <tr class="row0"></tr>
+                            <tr class="row1"></tr>
+                            <tr class="row2"></tr>
+                            <tr class="row3"></tr>
+                            <tr class="row4"></tr>
+                            <tr class="row5"></tr>
+                            <tr class="row6"></tr>
+                            <tr class="row7"></tr>
+                            <tr class="row8"></tr>
+                            <tr class="row9"></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="accumulatorTable">
+                    <h2>Accumulator</h2>
+                    <table>
+                        <tbody class="accumulatorDisplay">
+                            <tr class="row0"></tr>
+                            <tr class="row1"></tr>
+                            <tr class="row2"></tr>
+                            <tr class="row3"></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="clearFloat">
+			</div>
+            <!--<div class="beginAt">
+                <p>Start program at address (0-40): <input type="text" class="startAt"></input></p>
+            </div>-->
+			<div class="input">
+				<h1>Input</h1>
+				<div class="inputlist">
+                    <input type="text" class="userInput"></input><br/>
+                    <input type="text" class="userInput"></input><br/>
+                    <input type="text" class="userInput"></input><br/>
+				</div>
+				<input type="button" class="newInput" value="Add new input"></input>
+				<p>Note: if you dont have enough inputs for your op codes, the input value will default to 000</p>
+			</div>
+			<div class="output">
+				<h1>Output</h1>
+				<textarea class="outputbox"></textarea>
+				<input type="button" class="clearConsole" value="Clear Console"></input>
+			</div>
+			<div class="legend">
+				<h1>Instructions</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Op</th>
+                            <th>Instruction</th>
+                            <th>What it does</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0</td><td><b>INP</b></td><td>Store Input to address n</td>
+                        </tr>
+                        <tr>
+                            <td>1</td><td><b>CLA</b></td><td>Clear and add address n value to accumulator</td>
+                        </tr>
+                        <tr>
+                            <td>2</td><td><b>ADD</b></td><td>Add address n value to accumulator (make sure to clear first number)</td>
+                        </tr>
+                        <tr>
+                            <td>3</td><td><b>TAC</b></td><td>Test if there is a negative value in accumulator. Jumps to another step if there is. <b>Not yet implemented</b></td>
+                        </tr>
+                        <tr>
+                            <td>4</td><td><b>SFT</b></td><td>Shifts the accumulator. <b>Not yet implemented</b></td>
+                        </tr>
+                        <tr>
+                            <td>5</td><td><b>OUT</b></td><td>Output address n value to console</td>
+                        </tr>
+                        <tr>
+                            <td>6</td><td><b>STO</b></td><td>Store Accumulator value to address n</td>
+                        </tr>
+                        <tr>
+                            <td>7</td><td><b>SUB</b></td><td>Substract address n value to accumulator</td>
+                        </tr>
+                        <tr>
+                            <td>8</td><td><b>JMP</b></td><td>Jumps to address. <b>Not yet implemented</b></td>
+                        </tr>
+                        <tr>
+                            <td>9</td><td><b>HRS</b></td><td>Halt and reset program</td>
+                        </tr>
+                    </tbody>
+                </table>
+			</div>
+		</div>
+	</body>
+</html>
