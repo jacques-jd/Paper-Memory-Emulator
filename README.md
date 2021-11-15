@@ -12,5 +12,12 @@ No dependencies required. Has a visual display of the memory on the left. Operat
 | 30      | 542          |
 | 31      | 900          |
 
-Would display on the output "Input 1 + Input 2".
+With inputs
+
+| inputs |
+| ---    |
+| 25     |
+| 24     |
+
+Would display on the output "49".
 
